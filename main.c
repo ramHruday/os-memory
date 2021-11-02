@@ -14,7 +14,12 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "prototypes.h"
+#include "process.h"
+#include "queue.h"
+#include "memory.h"
+
+// creates a list of processes based on the provided filePath
+PROCESS* assign_process_list(const char* file_path);
 
 // global constants
 const int TIME_MAX = 100000;

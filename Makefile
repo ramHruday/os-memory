@@ -10,9 +10,6 @@ main: $(OBJ)
 	gcc -o $@ $^ $(CFLAGS)
 
 
-uncrustify:
-	uncrustify --replace --no-backup -c style.cfg *.c *.h
-
 clean:
 	rm -f main *.o core.*
 
