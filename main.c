@@ -311,7 +311,7 @@ PROCESS *pushToList(const char *path)
     FILE *filePtr = fopen(path, "r");
 
     prsNum = 0;
-    fscanf(filePtr, "%d", &num);
+    fscanf(filePtr, "%d", &prsNum);
 
     PROCESS *procList = malloc(prsNum * sizeof(PROCESS));
 
