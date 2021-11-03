@@ -1,9 +1,9 @@
 typedef struct EVENT
 {
     int assigned;
-    char location[40];
-    int proc_assign;
-    int page_num;
+    char location[100];
+    int assignPRS;
+    int pgNum;
 } EVENT;
 
 typedef struct event_list
@@ -13,7 +13,7 @@ typedef struct event_list
     int size;
 } event_list;
 
-event_list *create_event_list(int count, int size)
+event_list *createListOfEvents(int count, int size)
 {
     int i;
 
@@ -33,121 +33,118 @@ event_list *create_event_list(int count, int size)
     return e;
 }
 
-int proc_can_fit_into_memory(event_list *list, PROCESS *proc)
+int isMemoryFit(event_list *ls, PROCESS *prs)
 {
-    int i, num_free_frames = 0;
+    int freeCount = 0;
 
-    for (i = 0; i < list->count; i += 1)
+    for (int i = 0; i < ls->count; i += 1)
     {
-        if (!list->events[i].assigned)
+        if (!ls->events[i].assigned)
         {
-            num_free_frames += 1;
+            freeCount += 1;
         }
     }
 
-    // if the number of free frames * the page size is greater than the mem req
-    // for the process in question we can fit it in.
-    return (num_free_frames * list->size) >= proc->mem_reqs;
+    return (freeCount * ls->size) >= prs->mem_reqs;
 }
 
-void fit_proc_into_memory(event_list *list, PROCESS *proc)
+void fitPrsToMemory(event_list *ls, PROCESS *prs)
 {
-    // this assumes you've already checked that you *can* fit the proc into mem
-    int i, remaining_mem, current_page = 1;
+    int memLeft, currPageNum = 1;
 
-    remaining_mem = proc->mem_reqs;
+    memLeft = prs->mem_reqs;
 
-    for (i = 0; i < list->count; i += 1)
+    for (int i = 0; i < ls->count; i += 1)
     {
-        // if this frame is not assigned
-        if (!list->events[i].assigned)
-        {
-            // assign it
-            list->events[i].assigned = 1;
-            // set the page number
-            list->events[i].page_num = current_page;
-            // set the proc num
-            list->events[i].proc_assign = proc->pid;
 
-            current_page++;
-            remaining_mem -= list->size;
+        if (!ls->events[i].assigned)
+        {
+            ls->events[i].assigned = 1;
+
+            ls->events[i].pgNum = currPageNum;
+
+            ls->events[i].assignPRS = prs->pid;
+
+            currPageNum++;
+            memLeft -= ls->size;
         }
 
-        if (remaining_mem <= 0)
+        if (memLeft <= 0)
         {
             break;
         }
     }
 }
 
-void print_frame_list(event_list *list)
+void printEventList(event_list *ls)
 {
-    int i, in_free_block = 0, start;
+    int i, freeBlock = 0, start;
 
-    printf("\tMemory map:\n");
+    printf("\tMemory allocation for each process:\n");
 
-    for (i = 0; i < list->count; i += 1)
+    for (i = 0; i < ls->count; i += 1)
     {
-        if (!in_free_block && !list->events[i].assigned)
+        if (!freeBlock && !ls->events[i].assigned)
         {
-            in_free_block = 1;
+            freeBlock = 1;
             start = i;
         }
-        else if (in_free_block && list->events[i].assigned)
+        else if (freeBlock && ls->events[i].assigned)
         {
-            in_free_block = 0;
-            printf("\t\t%d-%d: Free frame(s)\n",
-                   start * list->size,
-                   (i * list->size) - 1);
+            freeBlock = 0;
+            printf("\t\t%d-%d: Free event(s)\n",
+                   start * ls->size,
+                   (i * ls->size) - 1);
         }
 
-        if (list->events[i].assigned)
+        if (ls->events[i].assigned)
         {
-            printf("\t\t%d-%d: Process %d, Page %d\n",
-                   i * list->size,
-                   ((i + 1) * list->size) - 1,
-                   list->events[i].proc_assign,
-                   list->events[i].page_num);
+            printf("\t\t%d-%d: Process %d, page no. %d\n",
+                   i * ls->size,
+                   ((i + 1) * ls->size) - 1,
+                   ls->events[i].assignPRS,
+                   ls->events[i].pgNum);
         }
     }
 
-    if (in_free_block)
+    if (freeBlock)
     {
-        printf("\t\t%d-%d: Free frame(s)\n",
-               start * list->size,
-               ((i)*list->size) - 1);
+        printf("\t\t%d-%d: Free events(s)\n",
+               start * ls->size,
+               ((i)*ls->size) - 1);
     }
 }
 
-int frame_list_is_empty(event_list *list)
+bool isInEventList(event_list *list)
 {
-    int i;
 
-    for (i = 0; i < list->count; i += 1)
+    bool flag = false;
+    for (int i = 0; i < list->count; i += 1)
     {
         if (list->events[i].assigned)
         {
-            return 0;
+            flag = true;
+            break;
         }
     }
 
-    return 1;
+    return flag;
 }
 
-void free_memory_for_pid(event_list *list, int pid)
+void freePid(event_list *ls, int pid)
 {
-    int i;
-    EVENT *frame;
 
-    for (i = 0; i < list->count; i += 1)
+    EVENT *event;
+
+    for (int i = 0; i < ls->count; i += 1)
     {
-        frame = &list->events[i];
+        event = &ls->events[i];
 
-        if (frame->proc_assign == pid)
+        if (event->assignPRS == pid)
         {
-            frame->proc_assign = 0;
-            frame->page_num = 0;
-            frame->assigned = 0;
+            event->assignPRS = 0;
+            event->pgNum = 0;
+            event->assigned = 0;
         }
     }
 }
