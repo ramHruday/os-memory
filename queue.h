@@ -1,15 +1,5 @@
-//
-//  queue.h
-//  Project3
-//
-//  Authors:
-//  - Stratton Aguilar
-//  - Ciaran Downey
-//
-//  Some rights reserved. See the included LICENSE file.
-//
-
-typedef struct proc_queue {
+typedef struct proc_queue
+{
     int capacity;
     int size;
     int front;
@@ -17,7 +7,8 @@ typedef struct proc_queue {
     PROCESS **elements;
 } proc_queue;
 
-proc_queue* create_proc_queue(int length) {
+proc_queue *create_proc_queue(int length)
+{
     proc_queue *q;
 
     q = malloc(sizeof(proc_queue));
@@ -31,8 +22,10 @@ proc_queue* create_proc_queue(int length) {
     return q;
 }
 
-void enqueue_proc(proc_queue* q, PROCESS* proc) {
-    if (q->size == q->capacity) {
+void enqueue_proc(proc_queue *q, PROCESS *proc)
+{
+    if (q->size == q->capacity)
+    {
         printf("ERROR: queue is full to capacity!\n");
 
         exit(2);
@@ -41,19 +34,23 @@ void enqueue_proc(proc_queue* q, PROCESS* proc) {
     q->size++;
     q->rear = q->rear + 1;
 
-    if (q->rear == q->capacity) {
+    if (q->rear == q->capacity)
+    {
         q->rear = 0;
     }
 
     q->elements[q->rear] = proc;
 }
 
-int queue_has_next(proc_queue* q) {
+int queue_has_next(proc_queue *q)
+{
     return q->size == 0 ? 0 : 1;
 }
 
-PROCESS* peek_queue(proc_queue* q) {
-    if (!queue_has_next(q)) {
+PROCESS *peek_queue(proc_queue *q)
+{
+    if (!queue_has_next(q))
+    {
         printf("ERROR: queue is empty, can't get the next element\n");
         exit(2);
     }
@@ -61,12 +58,15 @@ PROCESS* peek_queue(proc_queue* q) {
     return q->elements[q->front];
 }
 
-PROCESS* peek_queue_at_index(proc_queue* q, int index) {
+PROCESS *peek_queue_at_index(proc_queue *q, int index)
+{
     return q->elements[index];
 }
 
-void dequeue_proc(proc_queue* q) {
-    if (!queue_has_next(q)) {
+void dequeue_proc(proc_queue *q)
+{
+    if (!queue_has_next(q))
+    {
         printf("ERROR: queue is empty, can't dequeue anything\n");
         exit(2);
     }
@@ -74,20 +74,25 @@ void dequeue_proc(proc_queue* q) {
     q->size--;
     q->front++;
 
-    if (q->front == q->capacity) {
+    if (q->front == q->capacity)
+    {
         q->front = 0;
     }
 }
 
-int iterate_queue_index(proc_queue* q, int index) {
+int iterate_queue_index(proc_queue *q, int index)
+{
     return q->front + index;
 }
 
-void dequeue_proc_at_index(proc_queue* q, int index) {
+void dequeue_proc_at_index(proc_queue *q, int index)
+{
     int i, prev = 0;
 
-    for (i = 0; i < q->size; i += 1) {
-        if (i > index) {
+    for (i = 0; i < q->size; i += 1)
+    {
+        if (i > index)
+        {
             q->elements[prev] = q->elements[i];
         }
 
@@ -98,17 +103,18 @@ void dequeue_proc_at_index(proc_queue* q, int index) {
     q->rear--;
 }
 
-void print_proc_queue(proc_queue* q) {
+void print_proc_queue(proc_queue *q)
+{
     int counter;
 
-    PROCESS* proc;
+    PROCESS *proc;
 
     printf("\tInput queue: [ ");
-    for (counter = 0; counter < q->size; counter += 1) {
+    for (counter = 0; counter < q->size; counter += 1)
+    {
         proc = peek_queue_at_index(q, iterate_queue_index(q, counter));
 
         printf("%d ", proc->pid);
     }
     printf("]\n");
 }
-

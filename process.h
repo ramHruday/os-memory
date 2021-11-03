@@ -1,18 +1,9 @@
-//
-//  process.h
-//  Project3
-//
-//  Authors:
-//  - Stratton Aguilar
-//  - Ciaran Downey
-//
-//  Some rights reserved. See the included LICENSE file.
-//
 
 #ifndef Project3_process_h
 #define Project3_process_h
 
-typedef struct {
+typedef struct
+{
     int pid;
     int arrival_time;
     int life_time;

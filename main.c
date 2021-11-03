@@ -13,7 +13,7 @@ PROCESS *assign_process_list(const char *path);
 int number_of_procs = 0, last_announcement = -1;
 PROCESS *proc_list;
 proc_queue *queue;
-event_list *framelist;
+event_list *eventList;
 
 void main_loop()
 {
@@ -38,7 +38,7 @@ void main_loop()
             break;
         }
 
-        if (queue->size == 0 && frame_list_is_empty(framelist))
+        if (queue->size == 0 && frame_list_is_empty(eventList))
         {
             break;
         }
@@ -68,7 +68,7 @@ int main()
     queue = create_proc_queue(number_of_procs);
 
     // create a shared framelist
-    framelist = create_event_list(mem / p_size, p_size);
+    eventList = create_event_list(mem / p_size, p_size);
 
     main_loop();
 
@@ -93,7 +93,7 @@ void push_new(int time)
             enqueue_proc(queue, prs);
 
             print_proc_queue(queue);
-            print_frame_list(framelist);
+            print_frame_list(eventList);
         }
     }
 }
@@ -118,9 +118,9 @@ void kill_finished(int time)
             prs->is_active = 0;
             prs->time_finished = time;
 
-            free_memory_for_pid(framelist, prs->pid);
+            free_memory_for_pid(eventList, prs->pid);
 
-            print_frame_list(framelist);
+            print_frame_list(eventList);
         }
     }
 }
@@ -138,20 +138,20 @@ void allocate_mem(int time)
         index = iterate_queue_index(queue, i);
         proc = queue->elements[index];
 
-        if (proc_can_fit_into_memory(framelist, proc))
+        if (proc_can_fit_into_memory(eventList, proc))
         {
             printf("%sMM moves Process %d to memory\n",
                    get_announcement_prefix(time),
                    proc->pid);
 
-            fit_proc_into_memory(framelist, proc);
+            fit_proc_into_memory(eventList, proc);
 
             proc->is_active = 1;
             proc->time_added_to_memory = time;
 
             dequeue_proc_at_index(queue, i);
             print_proc_queue(queue);
-            print_frame_list(framelist);
+            print_frame_list(eventList);
         }
     }
 }
