@@ -310,7 +310,8 @@ PROCESS *pushToList(const char *path)
     int totalSpace = 0;
     FILE *filePtr = fopen(path, "r");
 
-    prsNum = get_number_of_processes_from_file(filePtr);
+    prsNum = 0;
+    fscanf(filePtr, "%d", &num);
 
     PROCESS *procList = malloc(prsNum * sizeof(PROCESS));
 
