@@ -14,6 +14,16 @@ PROCESS *prsList;
 proc_queue *prsQueue;
 event_list *eventList;
 
+void clear_stdin(char *buf)
+{
+    if (buf[strlen(buf) - 1] != '\n')
+    {
+        int ch;
+        while (((ch = getchar()) != '\n') && (ch != EOF))
+            ;
+    }
+}
+
 char *getPrefix(int time)
 {
     char *result;
@@ -32,6 +42,16 @@ char *getPrefix(int time)
     last_announcement = time;
 
     return result;
+}
+
+int multiple_of_one_hundred(int t)
+{
+    return (t % 100) == 0 ? 1 : 0;
+}
+
+int is_one_two_or_three(int t)
+{
+    return (t >= 1 && t <= 3) ? 1 : 0;
 }
 
 void pushNewQueue(int time)
@@ -88,51 +108,6 @@ void allocateMem(int time)
     }
 }
 
-void startTimeCounter()
-{
-    long time = 0;
-
-    while (1)
-    {
-        pushNewQueue(time);
-        terminateFinished(time);
-
-        allocateMem(time);
-
-        time++;
-
-        if (time > 10000)
-        {
-            printf("Run time exceeded\n");
-            break;
-        }
-
-        if (prsQueue->size == 0 && isInEventList(eventList))
-        {
-            break;
-        }
-    }
-
-    printTime();
-}
-
-int main()
-{
-    int size = 0;
-    int mem = 0;
-
-    char *path = malloc(100 * sizeof(char));
-
-    getInput(&mem, &size, path);
-    prsList = pushToList(path);
-    prsQueue = create_proc_queue(prsNum);
-    eventList = createListOfEvents(mem / size, size);
-
-    startTimeCounter();
-
-    return 0;
-}
-
 void terminateFinished(int time)
 {
     int i, time_spent_in_memory;
@@ -173,23 +148,67 @@ void printTime()
     printf("Average Turnaround Time: %2.2f\n", total / prsNum);
 }
 
-int multiple_of_one_hundred(int t)
+void startTimeCounter()
 {
-    return (t % 100) == 0 ? 1 : 0;
-}
+    long time = 0;
 
-int is_one_two_or_three(int t)
-{
-    return (t >= 1 && t <= 3) ? 1 : 0;
-}
-
-void clear_stdin(char *buf)
-{
-    if (buf[strlen(buf) - 1] != '\n')
+    while (1)
     {
-        int ch;
-        while (((ch = getchar()) != '\n') && (ch != EOF))
-            ;
+        pushNewQueue(time);
+        terminateFinished(time);
+
+        allocateMem(time);
+
+        time++;
+
+        if (time > 10000)
+        {
+            printf("Run time exceeded\n");
+            break;
+        }
+
+        if (prsQueue->size == 0 && isInEventList(eventList))
+        {
+            break;
+        }
+    }
+
+    printTime();
+}
+
+void fileInput(char *res)
+{
+    char buf[100];
+    FILE *fp;
+
+    while (1)
+    {
+        printf("Input file: ");
+
+        if (fgets(buf, 10, stdin) == NULL)
+        {
+            clear_stdin(buf);
+            printf("No data entered!\n");
+
+            continue;
+        }
+
+        if (sscanf(buf, "%s", res) <= 0)
+        {
+            clear_stdin(buf);
+            printf("No data entered!\n");
+
+            continue;
+        }
+
+        if (!(fp = fopen(res, "r")))
+        {
+            perror("ERROR: Could not open file!\n");
+        }
+        else
+        {
+            break;
+        }
     }
 }
 
@@ -229,42 +248,6 @@ int getNumberInputUser(const char *output, int (*func)(int))
     return res;
 }
 
-void fileInput(char *res)
-{
-    char buf[100];
-    FILE *fp;
-
-    while (1)
-    {
-        printf("Input file: ");
-
-        if (fgets(buf, 10, stdin) == NULL)
-        {
-            clear_stdin(buf);
-            printf("No data entered!\n");
-
-            continue;
-        }
-
-        if (sscanf(buf, "%s", res) <= 0)
-        {
-            clear_stdin(buf);
-            printf("No data entered!\n");
-
-            continue;
-        }
-
-        if (!(fp = fopen(res, "r")))
-        {
-            perror("ERROR: Could not open file!\n");
-        }
-        else
-        {
-            break;
-        }
-    }
-}
-
 void getInput(int *mem, int *page, char *path)
 {
     while (1)
@@ -298,6 +281,23 @@ void getInput(int *mem, int *page, char *path)
     }
 
     fileInput(path);
+}
+
+int main()
+{
+    int size = 0;
+    int mem = 0;
+
+    char *path = malloc(100 * sizeof(char));
+
+    getInput(&mem, &size, path);
+    prsList = pushToList(path);
+    prsQueue = create_proc_queue(prsNum);
+    eventList = createListOfEvents(mem / size, size);
+
+    startTimeCounter();
+
+    return 0;
 }
 
 PROCESS *pushToList(const char *path)
