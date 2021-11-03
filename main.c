@@ -14,6 +14,80 @@ PROCESS *prsList;
 proc_queue *prsQueue;
 event_list *eventList;
 
+char *getPrefix(int time)
+{
+    char *result;
+
+    result = malloc(20 * sizeof(char));
+
+    if (last_announcement == time)
+    {
+        sprintf(result, "\t");
+    }
+    else
+    {
+        sprintf(result, "t = %d: ", time);
+    }
+
+    last_announcement = time;
+
+    return result;
+}
+
+void pushNewQueue(int time)
+{
+    int i;
+    PROCESS *prs;
+
+    for (i = 0; i < prsNum; i += 1)
+    {
+        prs = &prsList[i];
+
+        if (prs->arrival_time == time)
+        {
+            printf("%sProcess %d arrives\n",
+                   getPrefix(time),
+                   prs->pid);
+
+            enqueue_proc(prsQueue, prs);
+
+            print_proc_queue(prsQueue);
+            printEventList(eventList);
+        }
+    }
+}
+
+void allocateMem(int time)
+{
+    int i, index, limit;
+    PROCESS *proc;
+
+    limit = prsQueue->size;
+
+    // enqueue any procs that can be put into mem
+    for (i = 0; i < limit; i += 1)
+    {
+        index = iterate_queue_index(prsQueue, i);
+        proc = prsQueue->elements[index];
+
+        if (isMemoryFit(eventList, proc))
+        {
+            printf("%sMM moves Process %d to memory\n",
+                   getPrefix(time),
+                   proc->pid);
+
+            fitPrsToMemory(eventList, proc);
+
+            proc->is_active = 1;
+            proc->time_added_to_memory = time;
+
+            dequeue_proc_at_index(prsQueue, i);
+            print_proc_queue(prsQueue);
+            printEventList(eventList);
+        }
+    }
+}
+
 void startTimeCounter()
 {
     long time = 0;
@@ -59,29 +133,6 @@ int main()
     return 0;
 }
 
-void pushNewQueue(int time)
-{
-    int i;
-    PROCESS *prs;
-
-    for (i = 0; i < prsNum; i += 1)
-    {
-        prs = &prsList[i];
-
-        if (prs->arrival_time == time)
-        {
-            printf("%sProcess %d arrives\n",
-                   getPrefix(time),
-                   prs->pid);
-
-            enqueue_proc(prsQueue, prs);
-
-            print_proc_queue(prsQueue);
-            printEventList(eventList);
-        }
-    }
-}
-
 void terminateFinished(int time)
 {
     int i, time_spent_in_memory;
@@ -107,57 +158,6 @@ void terminateFinished(int time)
             printEventList(eventList);
         }
     }
-}
-
-void allocateMem(int time)
-{
-    int i, index, limit;
-    PROCESS *proc;
-
-    limit = prsQueue->size;
-
-    // enqueue any procs that can be put into mem
-    for (i = 0; i < limit; i += 1)
-    {
-        index = iterate_queue_index(prsQueue, i);
-        proc = prsQueue->elements[index];
-
-        if (isMemoryFit(eventList, proc))
-        {
-            printf("%sMM moves Process %d to memory\n",
-                   getPrefix(time),
-                   proc->pid);
-
-            fitPrsToMemory(eventList, proc);
-
-            proc->is_active = 1;
-            proc->time_added_to_memory = time;
-
-            dequeue_proc_at_index(prsQueue, i);
-            print_proc_queue(prsQueue);
-            printEventList(eventList);
-        }
-    }
-}
-
-char *getPrefix(int time)
-{
-    char *result;
-
-    result = malloc(20 * sizeof(char));
-
-    if (last_announcement == time)
-    {
-        sprintf(result, "\t");
-    }
-    else
-    {
-        sprintf(result, "t = %d: ", time);
-    }
-
-    last_announcement = time;
-
-    return result;
 }
 
 void printTime()
@@ -193,7 +193,7 @@ void clear_stdin(char *buf)
     }
 }
 
-int process_numeric_input_from_user(const char *output, int (*func)(int))
+int getNumberInputUser(const char *output, int (*func)(int))
 {
     char buf[10];
     int success = 0;
@@ -238,10 +238,18 @@ void fileInput(char *res)
     {
         printf("Input file: ");
 
+        if (fgets(buf, 10, stdin) == NULL)
+        {
+            clear_stdin(buf);
+            printf("No data entered!\n");
+
+            continue;
+        }
+
         if (sscanf(buf, "%s", res) <= 0)
         {
             clear_stdin(buf);
-            printf("ERROR: You didn't enter a string!\n");
+            printf("No data entered!\n");
 
             continue;
         }
@@ -261,10 +269,10 @@ void getInput(int *mem, int *page, char *path)
 {
     while (1)
     {
-        *mem = process_numeric_input_from_user(
+        *mem = getNumberInputUser(
             "Memory size", multiple_of_one_hundred);
 
-        *page = process_numeric_input_from_user(
+        *page = getNumberInputUser(
             "Page size (1: 100, 2: 200, 3: 400)", is_one_two_or_three);
 
         switch (*page)
@@ -290,16 +298,6 @@ void getInput(int *mem, int *page, char *path)
     }
 
     fileInput(path);
-}
-
-// get number of processes from file
-int get_number_of_processes_from_file(FILE *filePtr)
-{
-    int num = 0;
-
-    fscanf(filePtr, "%d", &num);
-
-    return num;
 }
 
 PROCESS *pushToList(const char *path)
