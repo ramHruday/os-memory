@@ -3,9 +3,9 @@
 #include <stdbool.h>
 #include <string.h>
 
-#include "process.h";
-#include "queue.h";
-#include "memory.h";
+#include "process.h"
+#include "queue.h"
+#include "memory.h"
 
 PROCESS *pushToList(const char *path);
 
